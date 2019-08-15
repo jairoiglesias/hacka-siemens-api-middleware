@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+const superagent = require('superagent');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -9,5 +10,18 @@ router.get('/', function(req, res, next) {
 router.get('/appapi/test', function(req, res, next) {
   res.send("Hi, it's MindSphere");
 });
+
+router.get('/superagent', (req, res) => {
+
+
+  superagent.get('https://hacka-siemens-api-middleware.herokuapp.com/appapi/test').then(response => {
+
+    const resp = response.body
+
+    res.send("123 "+ resp)
+
+  })
+})
+
 
 module.exports = router;
