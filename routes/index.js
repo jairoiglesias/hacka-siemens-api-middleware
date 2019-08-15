@@ -16,7 +16,7 @@ router.get('/superagent', (req, res) => {
 
   superagent.get('https://hacka-siemens-api-middleware.herokuapp.com/appapi/test').then(response => {
 
-    const resp = response.body
+    const resp = JSON.stringify(response.body)
 
     res.send("123 "+ resp)
 
