@@ -76,12 +76,15 @@ router.get('/appapi/test', function(req, res, next) {
 
 router.get('/superagent', (req, res) => {
 
-  superagent.get('https://hacka-siemens-api-middleware.herokuapp.com/appapi/test').then(response => {
+  // superagent.get('https://hacka-siemens-api-middleware.herokuapp.com/appapi/test').then(response => {
 
     // res.send("123 "+ response.text)
-    res.status(200).json(statusMachines)
+    // res.status(200).json(statusMachines)
 
-  })
+  // })
+
+  res.status(200).json(statusMachines)
+
 })
 
 
