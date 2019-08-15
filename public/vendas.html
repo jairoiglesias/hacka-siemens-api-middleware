@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+            
+		</style>
+	</head>
+	<body>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        
+        <!-- THREEJS LIBS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js"></script>
+        <script src="https://unpkg.com/three@0.107.0/examples/js/controls/OrbitControls.js"></script>
+        <script src="https://unpkg.com/three@0.107.0/examples/js/loaders/FBXLoader.js"></script>
+        <script src="https://unpkg.com/zlibjs@0.3.1/bin/zlib.min.js"></script>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+		<script>
+
+            window.addEventListener('DOMContentLoaded', function() {
+
+                var canvas = document.getElementById('renderCanvas');
+                
+                var raycaster = new THREE.Raycaster();
+                var mouse = new THREE.Vector2()
+                var INTERSECTED;
+                var CUR_MODEL
+
+                var SCREEN_WIDTH = 900, SCREEN_HEIGHT = 650
+                var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+
+                function onMouseDown(event) {    
+                    event.preventDefault();
+                    
+                    var mouse3D = new THREE.Vector3( ( event.clientX / SCREEN_WIDTH ) * 2 - 1, -( event.clientY / SCREEN_HEIGHT ) * 2 + 1, 0.5 );     
+                    var raycaster =  new THREE.Raycaster();                                        
+                    raycaster.setFromCamera( mouse3D, camera );
+                    
+                    var intersects = raycaster.intersectObjects( scene.children, true );
+
+                    if ( intersects.length > 0 ) {
+
+                        // var intersectedColor = 0xffff00
+                        // var intersectedColor = Math.random() * 0xffffff
+                        // console.log(intersectedColor)
+                        // intersects[ 0 ].object.material.color.setHex( intersectedColor );
+
+                        var mat = new THREE.MeshPhongMaterial({color:0xD2D2FF, specular:0x333333, shininess:60, opacity:0.5,shading:THREE.SmoothShading});  
+                        
+                        intersects[ 0 ].object.material = mat;         
+                    }
+                    
+                }
+
+                function onMouseMove( event ) {
+
+                    event.preventDefault();
+
+                    mouse.x = ( event.clientX / SCREEN_WIDTH ) * 2 - 1;
+                    mouse.y = - ( event.clientY / SCREEN_HEIGHT ) * 2 + 1;
+
+                    var raycaster = new THREE.Raycaster();
+                    raycaster.setFromCamera( mouse, camera );
+                    var intersects = raycaster.intersectObjects( scene.children, true );
+
+                    if(intersects.length > 0) {
+                        if (intersects[0].object != INTERSECTED) {
+
+                            if (INTERSECTED){
+                                INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+                            }
+                            // store reference to closest object as current intersection object
+                            INTERSECTED = intersects[0].object;
+                            // store color of closest object (for later restoration)
+                            INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+                            
+                            // set a new color for closest object
+                            // var intersectedColor = 0xffff00
+                            var intersectedColor = 0xff0000
+                            INTERSECTED.material.color.setHex(intersectedColor);
+
+                        }
+                    }
+                    else{
+                        if (INTERSECTED){
+                            INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+                        }
+
+                        // remove previous intersection object reference
+                        //     by setting current intersection object to "nothing"
+                        INTERSECTED = null;
+                    }
+
+                }
+
+                window.addEventListener( 'mousemove', onMouseMove, false );
+                window.addEventListener( 'mousedown', onMouseDown );
+    
+                var scene = new THREE.Scene()
+
+                // var camera = new THREE.PerspectiveCamera(50, 500 / 400, 0.1, 1000);
+                var camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+
+
+                camera.position.y = 500
+                camera.position.z = 300;
+
+
+                scene.background = new THREE.Color( 0xa0a0a0 );
+                scene.fog = new THREE.Fog( 0xa0a0a0, 200, 1000 );
+
+				var hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+                hemisphereLight.position.set( 0, 200, 0 );
+                
+                scene.add( hemisphereLight );
+                
+                var directionalLight = new THREE.DirectionalLight( 0xffffff );
+				directionalLight.position.set( 0, 200, 100 );
+				directionalLight.castShadow = true;
+				directionalLight.shadow.camera.top = 180;
+				directionalLight.shadow.camera.bottom = - 100;
+				directionalLight.shadow.camera.left = - 120;
+				directionalLight.shadow.camera.right = 120;
+				scene.add( directionalLight );
+                
+                var renderer = new THREE.WebGLRenderer({ 
+                    canvas: canvas,
+                    antialias: true
+                })
+
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize(700, 400);
+                // renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+                
+                var controls = new THREE.OrbitControls( camera, renderer.domElement );
+                controls.update();
+
+
+                var loader = new THREE.FBXLoader();
+                
+                loader.load('./Machine.fbx', function(object){
+
+                    CUR_MODEL = object
+
+                    object.position.set(1, 1, -0.5)
+                    scene.add(object)
+
+                })
+
+
+                
+                // Define Render
+                var render = function() {
+
+                    requestAnimationFrame(render);
+                    controls.update()
+                    renderer.render(scene, camera);
+
+                    //  // update the picking ray with the camera and mouse position
+                    //  raycaster.setFromCamera( mouse, camera );
+
+                    // // calculate objects intersecting the picking ray
+                    // var intersects = raycaster.intersectObjects( scene.children, true );
+
+                    // for ( var i = 0; i < intersects.length; i++ ) {
+
+                    //     intersects[ i ].object.material.color.set( 0xff0000 );
+
+                    // }
+
+
+                }
+                
+                // Start Render
+                render();
+
+                document.getElementById("btn_prev").addEventListener('click', function(){
+
+                    scene.remove(CUR_MODEL)
+
+                    loader.load('./Peca.fbx', function(object){
+
+                        CUR_MODEL = object
+
+                        object.position.set(1, 1, -0.5)
+                        scene.add(object)
+
+                        camera.position.y = 0
+                        camera.position.z = 10;
+
+                    })
+
+                })
+
+                document.getElementById("btn_next").addEventListener('click', function(){
+
+                    scene.remove(CUR_MODEL)
+
+                    loader.load('./Machine.fbx', function(object){
+
+                        CUR_MODEL = object
+
+                        object.position.set(1, 1, -1)
+                        camera.position.y = 500
+                        camera.position.z = 300;
+                        scene.add(object)
+
+                    })
+
+                })
+
+                // document.getElementById("button").addEventListener('click', function(){
+
+                    // $('#list-tab a:nth-child(3)').tab('show') // Select third tab
+                    
+                    // const url = 'https://mdspdvbr-dynamicarwebapi-mdspdvbr.eu1.mindsphere.io/appapi/test'
+                    
+                    // fetch(url)
+                    // .then((resp) => resp.json()) // Transform the data into json
+                    // .then(function(data) {
+                    //     console.log('fetch resp', data)
+                    // })
+
+                    // const url = 'https://mdspdvbr-dynamicarwebapi-mdspdvbr.piam.eu1.mindsphere.io/oauth/token'
+                    
+                    // fetch(url, {
+                    //     method: 'POST'
+                    // }).then((resp) => {
+                    //     console.log(resp)
+                    // })
+
+                // })
+
+            })
+
+
+        </script>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Vendas Dynamic Air</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+      
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item active">
+              <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Link</a>
+            </li>
+            <!-- <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Dropdown
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="#">Action</a>
+                <a class="dropdown-item" href="#">Another action</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Something else here</a>
+              </div>
+            </li> -->
+            <!-- <li class="nav-item">
+              <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+            </li> -->
+          </ul>
+          <form class="form-inline my-2 my-lg-0">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+          </form>
+        </div>
+      </nav>
+        <br>
+        <br>
+        
+      <div class="container">
+          
+          <button type="button" class="btn btn-success btn-arrow-left" id="btn_prev">Anterior</button>
+          <button type="button" class="btn btn-info btn-arrow-right" id="btn_next">Proximo</button>
+        <div class="row">
+            <div class="float-left">
+                <div class="col-4">
+                    <canvas id="renderCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="float-right">
+                <div class="col-12">
+                    <div class="list-group" id="list-tab" role="tablist">
+                        <a class="list-group-item list-group-item-action active" id="list-home-list" data-toggle="list" href="#list-home" role="tab" aria-controls="home">
+                            Custom Item A
+                        </a>
+                        <a class="list-group-item list-group-item-action" id="list-profile-list" data-toggle="list" href="#list-profile" role="tab" aria-controls="profile">Custom Item B</a>
+                        <a class="list-group-item list-group-item-action" id="list-messages-list" data-toggle="list" href="#list-messages" role="tab" aria-controls="messages">Custom Item C</a>
+                        <a class="list-group-item list-group-item-action" id="list-settings-list" data-toggle="list" href="#list-settings" role="tab" aria-controls="settings">Custom Item D</a>
+                    </div>
+                </div>
+
+
+            </div>
+
+            
+        </div>
+            
+
+            <div class="row">
+
+                    <div class="col-8">
+                            <div class="tab-content" id="nav-tabContent">
+                              <div class="tab-pane fade show active" id="list-home" role="tabpanel" aria-labelledby="list-home-list">
+
+                                	Sim
+                                    Dimensões (LxAxP)	21,50x38,10x43,00cm
+                                    Peso	7kg
+                                    Corpo da Caldeira em alumínio	Sim
+                                    Frequência	60 HZ
+                                    Pressão	15 bar
+                                    Potência	1250W
+                                    Cor predominante 	Prata
+                                    Bandeja removível 	Sim
+                                    País de Origem 	Itália
+                                    Garantia	12 meses
+
+                              </div>
+                              <div class="tab-pane fade" id="list-profile" role="tabpanel" aria-labelledby="list-profile-list">
+
+                                	Sim
+                                    Dimensões (LxAxP)	21,50x38,10x43,00cm
+                                    Peso	7kg
+                                    Corpo da Caldeira em alumínio	Sim
+                                    Frequência	60 HZ
+                                    Pressão	15 bar
+                                    Potência	1250W
+                                    Cor predominante 	Prata
+                                    Bandeja removível 	Sim
+                                    País de Origem 	Itália
+                                    Garantia	12 meses
+
+                              </div>
+
+                              <div class="tab-pane fade" id="list-messages" role="tabpanel" aria-labelledby="list-messages-list">
+
+                                    O ISO-LIFT™ rosca transportadora flexível é usada para transportar quase todos os sólidos secos a granel, inclusive pós químicos finos e/ou pó secos, à uma distância de 80 pés horizontais ou verticais. 
+                                    É versátil com relação ao tamanho, densidade e mistura da partícula. 
+                                    A rosca transportadora flexível ISO-LIFT, é completamente livre de vazamento de pó e de baixo custo. Isto porque a rosca pode se mover por dentro do tubo transportador flexível do ISO-LIFT descartando a necessidade de um eixo central ou rolamento, diferentemente de tradicionais roscas transportadoras que possuem um eixo central giratório no centro. 
+
+                              </div>
+                              <div class="tab-pane fade" id="list-settings" role="tabpanel" aria-labelledby="list-settings-list">
+
+                                    Rosca de alimentação de aço inoxidável com polimento especial
+                                    Motor T.E.F.C. de 220/440 volts e montagem de propulsão
+                                    Velocidades de alimentação personalizadas
+                                    Programável
+                                    Feito para encaixar na maioria dos recipientes plásticos standart
+                                    Válvula de isolamento operada a ar
+                                    Disposição simples de montagem
+
+                              </div>
+                            </div>
+                          </div>
+
+            </div>
+    </div>
+
+        <!-- <button id="button">Teste</button> -->
+	</body>
+</html>
